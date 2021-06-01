@@ -1,0 +1,44 @@
+version: '3.3'
+services:
+    redis_service:
+        container_name: redis_service
+        image: ${REDIS_SERVICE_IMAGE}
+        restart: ${REDIS_RESTART}
+        volumes:
+            - "${REDIS_SSL_CERT}:/etc/ssl/tls-redis.crt"
+            - "${REDIS_SSL_KEY}:/etc/ssl/tls-redis.key"
+            - "${REDIS_STORAGE_DIR}:/data"
+        environment:
+            REDIS_SERVICE_PASSWORD: "${REDIS_SERVICE_PASSWORD}"
+        command:
+            - "redis-server"
+            - "--tls-auth-clients"
+            - "no"
+            - "--tls-port"
+            - "6379"
+            - "--port"
+            - "0"
+            - "--tls-cert-file"
+            - "/etc/ssl/tls-redis.crt"
+            - "--tls-key-file"
+            - "/etc/ssl/tls-redis.key"
+            - "--tls-ca-cert-file"
+            - "/etc/ssl/tls-redis.crt"
+            - "--requirepass"
+            - "${REDIS_SERVICE_PASSWORD}"
+        ports:
+            - "6379:6379"
+    redis_commander:
+        image: ${REDIS_COMMANDER_IMAGE}
+        container_name: redis_commander
+        depends_on:
+            - redis_service
+        restart: ${REDIS_RESTART}
+        environment:
+            REDIS_HOST: "${REDIS_HOSTNAME}"
+            REDIS_PORT: 6379
+            REDIS_LABEL: "${REDIS_COMMANDER_LABEL}"
+            REDIS_TLS: "true"
+            REDIS_PASSWORD: "${REDIS_SERVICE_PASSWORD}"
+        ports:
+            - "127.0.0.1:8081:8081"

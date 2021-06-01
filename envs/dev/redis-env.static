@@ -1,0 +1,14 @@
+#REDIS_RESTART=unless-stopped
+#REDIS_HOSTNAME=foo.bar.org
+#REDIS_SSL_CERT=/etc/ssl/fullchain.pem
+#REDIS_SSL_KEY=/etc/ssl/privkey.pem
+#REDIS_DIR=$HOME/poll/server/docker/services/redis
+#REDIS_STORAGE_DIR=$HOME/poll/server/docker/services/redis/storage
+
+## REDIS SERVICE
+REDIS_SERVICE_IMAGE=redis:6.2.3
+#REDIS_SERVICE_PASSWORD=PLEASE_SET_A_PASS_IN_YOUR_PRIVATE_FILE
+
+## REDIS COMMANDER
+REDIS_COMMANDER_IMAGE=rediscommander/redis-commander:latest
+REDIS_COMMANDER_LABEL="dev"

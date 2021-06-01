@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+current_dir="$(realpath -s "$(dirname "$(readlink -s -f "${BASH_SOURCE[0]}")")")" #this must be the script dir
+. "$current_dir/bash/prelude.bash" || { echo "failed to source prelude"; exit 13; }
+
+# set service name
+service_name=redis #must be set before including serice.bash
+
+# import service lib
+. "$lib_dir/service.bash" || ferr "failed to source service lib"
+
+# initializes service - sets variables and creates env-file
+init_service "$@"
+shift 1
+
+redis_start() {
+    # add more dynamic settings to settings to the .env-file
+    REDIS_STORAGE_DIR="${service_dir}/storage"
+    [[ -d $REDIS_STORAGE_DIR ]] || ferr "REDIS_STORAGE_DIR: $REDIS_STORAGE_DIR does not exist"
+    echo "REDIS_STORAGE_DIR=${service_dir}/storage" >> "$env"
+
+    # complete env - adds overrides
+    finish_env
+
+    # run container
+    cd_service
+
+    run docker-compose --project-dir "$service_dir" -f redis.yml up ${daemon:-} || ferr "failed to start redis"
+}
+
+redis_stop() {
+    #stop conatiner
+    cd_service
+
+    run docker-compose --project-dir "$service_dir" -f redis.yml down || ferr "failed to stop redis"
+}
+
+daemon="-d"
+case "${1:-}" in
+    fg|foreground|verbose)
+        unset daemon
+        redis_start
+    ;;
+    start)
+        redis_start
+    ;;
+    stop)
+        redis_stop
+    ;;
+    restart)
+        redis_stop
+        redis_start
+    ;;
+    *)
+        ferr "usage: $0 <env> (fg|start|stop|restart)"
+    ;;
+esac
